@@ -1,3 +1,5 @@
+export {};
+
 const input = `
 2911threeninesdvxvheightwobm
 3three16xsxhpnqmzmnine8one

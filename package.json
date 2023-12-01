@@ -1,0 +1,13 @@
+{
+  "name": "adventofcode2023",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "tsc -p tsconfig.json && node src/index.js",
+    "compile": "tsc -p tsconfig.json"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}

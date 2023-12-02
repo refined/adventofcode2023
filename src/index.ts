@@ -1,1 +1,1 @@
-import "./1-day-2"
+import "./2-day-2";

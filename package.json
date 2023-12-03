@@ -4,14 +4,14 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "tsc -p tsconfig.json && node src/index.js && exit 1",
-    "compile": "tsc -p tsconfig.json"
+    "start": "tsc -p tsconfig.json && node src/index.js && exit 1"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
     "nvm": "^0.0.4",
-    "tsc": "^2.0.4"
+    "tsc": "^2.0.4",
+    "typescript": "^5.3.2"
   }
 }

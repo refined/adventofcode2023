@@ -231,19 +231,50 @@ humidity-to-location map:
 `;
 
 
-function shiftInMap(seed: number, map: Array<{ to: number, from: number, shift: number }>) {
-    for (const toFrom of map) {
-        if (toFrom.from <= seed && seed <= toFrom.from + toFrom.shift) {
-            return (toFrom.to - toFrom.from) + seed;
+function splitSeeds(seeds: Array<[number, number]>, splitters: Array<{ to: number, from: number, shift: number }>): Array<[number, number]> {
+    const res: Array<[number, number]> = [];
+    let j = 0;
+    let i = 0;
+    while (i < seeds.length && j < splitters.length ) {
+        const seed = seeds[i];
+        const [from, to] = seed;
+        const shift = splitters[j].to - splitters[j].from;
+        const splitter = [splitters[j].from, splitters[j].from + splitters[j].shift];
+        if (splitter[0] <= from && to <= splitter[1]) { // {[]}
+            res.push([from + shift, to + shift]);
+            i++;
+        } else if (from <= splitter[0] && splitter[1] <= to) { //    [{}]
+            res.push([splitter[0] + shift, splitter[1] + shift]);
+            res.push([from, splitter[0]]);
+            seeds[i] = [splitter[1], to];
+            j++;
+        } else if (from <= splitter[1] && splitter[1] <= to) { // {[}]
+            res.push([from + shift, splitter[1] + shift]);
+            seeds[i] = [splitter[1], to];
+            j++;
+        } else if (from <= splitter[0] && splitter[0] <= to) { // [{]}
+            res.push([from, splitter[0]]);
+            res.push([splitter[0] + shift, to + shift]);
+            i++;
+        } else {
+            if (seed[0] < splitter[0]) {
+                i++;
+                res.push(seed);
+            } else {
+                j++;
+            }
         }
     }
-    return seed;
+    if (j === splitters.length && i < seeds.length) {
+        res.push(...seeds.slice(i));
+    }
+    return res;
 }
+
 
 function main(input: string) {
     const lines = input.split("\n").map(t => t.trim()).filter((t) => t);
-    let sum = 0;
-
+    
     const [seedLines, ...mapLines] = lines;
     const seeds = seedLines.split(":")[1].split(" ").map(v => v.trim()).filter(v => v).map(Number);
 
@@ -263,21 +294,19 @@ function main(input: string) {
     }
     maps.push(map);
 
-    let minSeed = Number.MAX_SAFE_INTEGER;
-    for (let i = 0; i < seeds.length; i += 2) {
-        const seedStart = seeds[i];
-        const seedEnd = seeds[i + 1];
-        for (let seed = seedStart; seed < seedStart + seedEnd; seed++) {
-            let testSeed = seed;
-            for (const map1 of maps) {
-                testSeed = shiftInMap(testSeed, map1);
-            }
-            minSeed = Math.min(testSeed, minSeed);
-        }
-        console.log(`Map min: ${minSeed} - ${seedStart}`);
+    let splits: Array<[number, number]> = [];
+    for (let i = 0; i < seeds.length; i+=2) {
+        splits.push([seeds[i], seeds[i] + seeds[i + 1]])
+    }
+    splits = splits.sort((a, b) => a[0] - b[0]);
+
+    for (const map1 of maps) {
+        splits = splitSeeds(splits, map1.sort((a, b) => a.from - b.from))
+            .sort((a, b) => a[0] - b[0]);        
+        console.log("splits:" + splits.map(s => `${s[0]}:${s[1]}`));
     }
 
-    console.log(minSeed);
+    console.log(splits[0][0]);
 }
 
 console.log("test");

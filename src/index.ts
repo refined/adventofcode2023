@@ -1,1 +1,1 @@
-import "./6-day-2";
+import "./7-day-2";

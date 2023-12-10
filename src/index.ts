@@ -1,1 +1,1 @@
-import "./8-day-2-fast";
+import "./9-day-2";

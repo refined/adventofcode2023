@@ -261,41 +261,6 @@ function inPath(i: number, j: number, path: Array<[number, number]>): boolean {
     return !path.every(p => !(i === p[0] && j === p[1]));
 }
 
-function isInside(i: number, j: number, lines: string[], path: Array<[number, number]>): boolean {
-    if (inPath(i, j, path)) {
-        return false;
-    }
-    let countToRight = 0;
-    for (let i1 = i; i1 < lines.length; i1++) {
-        if (inPath(i1, j, path)) {
-            countToRight ++;
-        }
-    }
-    let countToLeft = 0;
-    for (let i1 = i; i1 >= 0; i1--) {
-        if (inPath(i1, j, path)) {
-            countToLeft ++;
-        }
-    }
-    let countToBottom = 0;
-    for (let j1 = j; j1 < lines[0].length; j1++) {
-        if (inPath(i, j1, path)) {
-            countToBottom ++;
-        }
-    }
-    let countToTop = 0;
-    for (let j1 = j; j1 >= 0; j1--) {
-        if (inPath(i, j1, path)) {
-            countToTop ++;
-        }
-    }
-
-    return countToRight % 2 === 1 
-        && countToLeft % 2 === 1 
-        && countToBottom % 2 === 1 
-        && countToTop % 2 === 1;
-}
-
 function checkIfNewIntersect(i: number, j: number, lines: string[]): boolean {
     // "F----7" - 2 intersections - if F7 than true
     // "F----J" - 1 intersection - only F will return true
@@ -382,4 +347,4 @@ console.log("task");
 main(task);
 console.log("done");
 
-// Problem with S sign - so manually extract XXXXXXXX from ansfer - will be 467
+// Problem with S sign - so manually extract XXXXXXXX from answer - will be 467

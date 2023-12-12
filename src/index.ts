@@ -1,8 +1,8 @@
 console["logCopy"] = console.log.bind(console);
 
 console.log = function (data) {
-    var currentDate = '[' + new Date().toISOString() + '] ';
+    var currentDate = '[' + new Date().toLocaleString() + '] ';
     this.logCopy(currentDate, data);
 };
 
-import "./12-day-2";
+import "./13-day-1";

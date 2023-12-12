@@ -11,8 +11,6 @@ const test = `
 ?###???????? 3,2,1
 `;
 
-
-
 const task = `
 ???#???.#??####? 5,1,5
 ???#????.#??????? 2,1,6
@@ -1016,19 +1014,54 @@ const task = `
 ?##????????.?###?#. 8,1,4,1
 `;
 
-// ?###???????? 3,2,1
-// .###.##.#...
-// .###.##..#..
-// .###.##...#.
-// .###.##....#
-// .###..##.#..
-// .###..##..#.
-// .###..##...#
-// .###...##.#.
-// .###...##..#
-// .###....##.#
+// ???.### 1,1,3
+// ??.### [] 1,1,3
+// #??.### [1] 1,3 
+
+// ?.### [X] 1,1,3
+// #.?.### [1] 1,3 
+// .#?.### [1] 1,3
+// ##?.### [X] 1,3 
+
+const cache = new Map<string, Map<string, number>>();
+
+function addCache(guess: string, arrange: number[], value: number) {
+    if (!cache.has(guess)) {
+        cache.set(guess, new Map());
+    }
+    const guessCache = cache.get(guess);
+    guessCache.set(arrange.join(","), value);
+}
+
+function getCache(guess: string, arrange: number[]): number {
+    if (cache.has(guess)) {
+        const guessCache = cache.get(guess);
+        if (guessCache.has(arrange.join(","))) {
+            return guessCache.get(arrange.join(","));
+        }
+    }
+    return null;
+}
+
+function removeLast(guess: string, arrange: number[]): number {
+    if (guess[guess.length - 1] === "#") {
+        const lastSharp = arrange[arrange.length - 1];
+        for (let i = guess.length - 1; i >= guess.length - lastSharp; i--) {
+            if (guess[i] === ".") {
+                return -1;
+            }
+        }
+        return lastSharp;
+    }
+    return 0;
+}
 
 function checkVariants(guess: string, arrange: number[]): number {
+    const cc = getCache(guess, arrange);
+    if (cc) {
+        return cc;
+    }
+
     if (guess.length === 0) {
         return arrange.length > 0 ? 0 : 1;
     }
@@ -1037,8 +1070,18 @@ function checkVariants(guess: string, arrange: number[]): number {
     }
     let counter = [...guess].filter(ch => ch === "?" || ch === "#").length;
     let sum = arrange.reduce((s, v) => s += v)
-    if (counter < sum) {
+    if (counter < sum || sum + arrange.length - 1 > guess.length) {
+        addCache(guess, arrange, 0);
         return 0;
+    }
+    const removeFromEnd = removeLast(guess, arrange);
+    if (removeFromEnd) {
+        let res = 0;
+        if (removeFromEnd !== -1) {
+            res = checkVariants(guess.substring(0, guess.length - removeFromEnd - 1), arrange.slice(0, arrange.length - 1));
+        }
+        addCache(guess, arrange, res);
+        return res;
     }
 
     let i = 0;
@@ -1051,19 +1094,25 @@ function checkVariants(guess: string, arrange: number[]): number {
         if (guess[j] === undefined) return 0;
         const var1 = "#" + guess.substring(j + 1);
         const var2 = guess.substring(j + 1);
-        return checkVariants(var1, arrange) + checkVariants(var2, arrange);
+        const res = checkVariants(var1, arrange) + checkVariants(var2, arrange);
+        addCache(guess, arrange, res);
+        return res;
     }
 
     if (sharpActualCount === arrange[0]) {
         const var1 = guess.substring(j + 1);
-        return checkVariants(var1, arrange.slice(1));
+        const res = checkVariants(var1, arrange.slice(1));
+        addCache(guess, arrange, res);
+        return res;
     }
     if (sharpActualCount > arrange[0]) {
         return 0;
     }
 
     if (guess[j] === '?') {
-        return checkVariants(guess.substring(i, j) + "#" + guess.substring(j + 1), arrange);
+        const res = checkVariants(guess.substring(i, j) + "#" + guess.substring(j + 1), arrange);
+        addCache(guess, arrange, res);
+        return res;
     }
     return 0;
 }
@@ -1073,8 +1122,16 @@ function main(input: string) {
     let sum = 0;
 
     for (const line of lines) {
-        const guess = line.split(" ")[0];
-        const arrange = line.split(" ")[1].split(",").map(Number);
+        const cguess = line.split(" ")[0];
+        const carrange = line.split(" ")[1].split(",").map(Number);
+        let guess = cguess;
+        let arrange = [...carrange];
+        for (let i = 0; i < 4; i++) {
+            guess = guess + "?" + cguess;
+            arrange.push(...carrange);
+        }
+        // cache.clear();
+        console.log("input: " + line + " memory: " + cache.size);
         const s = checkVariants(guess, arrange);
         console.log("var counter " + s);
         sum += s;

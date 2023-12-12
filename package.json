@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "tsc -p tsconfig.json && node src/index.js && exit 1"
+    "start": "tsc -p tsconfig.json && node --max-old-space-size=16000 src/index.js && exit 1"
   },
   "keywords": [],
   "author": "",

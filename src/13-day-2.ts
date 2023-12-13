@@ -1334,13 +1334,36 @@ const task = `
 .#..#.....####.##
 `;
 
+function isRowsEqualWithFix(row1: string, row2: string) {
+    let fixes = 1;
+    for (let i = 0; i < row1.length; i++) {
+        if (row1[i] !== row2[i]) {
+            if (fixes <= 0) {
+                return false;
+            }
+            fixes--;
+        }
+    }
+    return true;
+}
+
 function ifVertical(task: string[], i: number): boolean {
+    let fixes = 1;
     let j = 1;
     while (i + j < task.length && i - j + 1 >= 0) {
-        if (task[i - j + 1] !== task[i + j]) {
-            return false;
+        if (task[i - j + 1] === task[i + j]) {
+            j++;
+            continue;
         }
-        j++;
+        if (fixes > 0 && isRowsEqualWithFix(task[i - j + 1], task[i + j])) {
+            fixes--;
+            j++;
+            continue;
+        }
+        return false;
+    }
+    if (fixes === 1) {
+        return false;
     }
     return true;
 }

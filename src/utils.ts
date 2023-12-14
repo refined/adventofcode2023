@@ -52,3 +52,7 @@ export function lcm(array) {
 export function replaceAt(str: string, index: number, replacement: string) {
     return str.substring(0, index) + replacement + str.substring(index + replacement.length);
 }
+
+export function transpose(lines: string[]): string[] {
+    return [...lines[0]].map((_, colIndex) => lines.map(row => row[colIndex]).join(""));
+}

@@ -1,4 +1,4 @@
-import { BinaryHeap, defaultComparator } from './priorityQueue'
+import { BinaryHeap } from './binaryHeap'
 
 export { };
 
@@ -179,9 +179,9 @@ function main(input: string) {
         grid.push([...line].map(Number));
     }
 
-    const pq = new BinaryHeap<[number, number, number, number, number, number]>({
-        comparator: (a, b) => a[0] !== b[0] ? b[0] - a[0] : 0
-    });
+    const pq = new BinaryHeap<[number, number, number, number, number, number]>(
+        (a, b) => a[0] !== b[0] ? b[0] - a[0] : 0
+    );
     pq.push([0, 0, 0, 0, 0, 0]);
 
     while (!pq.isEmpty()) {

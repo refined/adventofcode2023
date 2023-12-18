@@ -746,10 +746,15 @@ function main(input: string) {
     const lines = input.split("\n").map(t => t.trim()).filter((t) => t);
     let sum = 0;
 
-    const moves: Map<number, Map<number, [[number, number], [number, number]]>> = new Map();
-    const area: number[][] = Array<number[]>(10000).fill(Array<number>(10000).fill(0));
-    let i = 5000;
-    let j = 5000;
+    const moves: Map<number, Map<number, [[string, string], [number, number]]>> = new Map();
+    const MAX = 1000;
+    const area: number[][] = [];
+    for (let index = 0; index < MAX; index++) {
+        area.push(Array<number>(MAX).fill(0));
+    }
+    let i = MAX / 2;
+    let j = MAX / 2;
+    let prevDir = lines[lines.length - 1].split(" ")[0];
     for (const line of lines) {
         const dir = line.split(" ")[0];
         const length = Number(line.split(" ")[1]);
@@ -758,19 +763,20 @@ function main(input: string) {
         else if (dir === "D") move = [1, 0];
         else if (dir === "L") move = [0, -1];
         else if (dir === "U") move = [-1, 0];
-        for (let i1 = i; i1 <= i + move[0] * length; i1++) {
+        for (let i1 = i; i1 !== i + move[0] * length; i1 += move[0]) {
             area[i1][j] = 1;
         }
-        for (let j1 = j; j1 <= j + move[1] * length; j1++) {
+        for (let j1 = j; j1 !== j + move[1] * length; j1 += move[1]) {
             area[i][j1] = 1;
         }
         if (!moves.has(i)) {
             moves.set(i, new Map());
         }
         const toI = moves.get(i)!;
-        toI.set(j, [move, [i + move[0] * length, j + move[1] * length]]);
+        toI.set(j, [[prevDir, dir], [i + move[0] * length, j + move[1] * length]]);
         i = i + move[0] * length;
         j = j + move[1] * length;
+        prevDir = dir;
     }
 
     for (let i1 = 0; i1 < area.length; i1++) {
@@ -784,11 +790,24 @@ function main(input: string) {
                         sum += 1;
                         j1 += 1;
                     }
+                    j1 -= 1;
+                    const prevDir: string = move[0][0];
+                    const dir: string = move[0][1];
+                    const nextDir: string = moves.get(i1)?.get(j1)[0][1];
+                    if (dir === "R" && prevDir === nextDir) {
+                        isIn = !isIn;
+                    }
+                    if ((dir === "D" || dir === "U") && moves.get(i1)?.get(j1)[0][0] === dir) {
+                        isIn = !isIn;
+                    }
+                } else {
+                    isIn = !isIn;
+                    sum += 1;
                 }
-                isIn = !isIn;
-            }
-            if (isIn) {
-                sum += 1;
+            } else {
+                if (isIn) {
+                    sum += 1;
+                }
             }
         }
     }

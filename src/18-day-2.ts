@@ -741,6 +741,7 @@ U 3 (#4d31f3)
 L 6 (#17d212)
 U 5 (#55ffd3)
 `;
+
 function getOneLineSum(verticalLines: [coord, coord][], row: number) {
     let sum = 0;
     const linesMerged: coord[] = [];
@@ -788,42 +789,6 @@ function getOneLineSum(verticalLines: [coord, coord][], row: number) {
     return sum + verticalLines.length;
 }
 
-function getOneLineSum0(verticalLines: [coord, coord][], row: number) {
-    let sum = 0;
-    const linesMerged: coord[] = [];
-    for (let i = 0; i < verticalLines.length; i++) {
-        const lineStart = verticalLines[i][0];
-        const lineEnd = verticalLines[i][1];
-        if (verticalLines[i+1]) {  
-            const nextLineStart = verticalLines[i+1][0];
-            const nextLineEnd = verticalLines[i+1][1];
-    
-            // if both start or end
-            if (row === lineStart[0] && row === nextLineStart[0] 
-                || row === lineStart[0] && row === nextLineEnd[0]
-                || row === lineEnd[0] && row === nextLineStart[0]
-                || row === lineEnd[0] && row === nextLineEnd[0]) {
-                sum += nextLineStart[1] - lineStart[1] - 1;
-                if ((row === lineStart[0] && row === nextLineEnd[0]) || (row === lineEnd[0] && row === nextLineStart[0])) { // one lines up and one line down
-                    linesMerged.push(linesMerged.length % 2 === 0 ? nextLineStart : lineStart);
-                } else {}
-                i++;
-            } else {
-                linesMerged.push(lineStart);
-            }
-        } else {
-            linesMerged.push(lineStart);
-        }      
-    }
-
-    for (let i = 0; i < linesMerged.length-1; i+=2) {
-        const lineStart = linesMerged[i];
-        const nextLineStart = linesMerged[i+1];
-        sum += nextLineStart[1] - lineStart[1] - 1;
-    }
-    return sum + verticalLines.length;
-}
-
 function main(input: string) {
     const lines = input.split("\n").map(t => t.trim()).filter((t) => t);
     let sum = 0;
@@ -832,16 +797,17 @@ function main(input: string) {
 
     let i = 0;
     let j = 0;
-
+    
     for (const line of lines) {
-        const dir = line.split(" ")[0];
-        const length = Number(line.split(" ")[1]);
+        const hex = line.split(" ")[2];
+        const length = parseInt(hex.substring(2, 7), 16);
+        const dir = hex.substring(7, 8);
         let move: [number, number] = [0, 0];
-        if (dir === "R") move = [0, 1];
-        else if (dir === "D") move = [1, 0];
-        else if (dir === "L") move = [0, -1];
-        else if (dir === "U") move = [-1, 0];
-        
+        if (dir === "0") move = [0, 1];
+        else if (dir === "1") move = [1, 0];
+        else if (dir === "2") move = [0, -1];
+        else if (dir === "3") move = [-1, 0];
+
         if (move[0] !== 0) {
             if (move[0] > 0) {
                 verticalLines.push([[i,j], [i + move[0] * length, j + move[1] * length]]);
@@ -865,7 +831,7 @@ function main(input: string) {
         // add new lines that starting here 
         const newLines = verticalLines.filter(v => v[0][0] === row);
         verticalLines = verticalLines.filter(v => v[0][0] !== row);
-        arr.push(...newLines);        
+        arr.push(...newLines);
         arr.sort((a, b) => a[0][1] - b[0][1]);
         sum += getOneLineSum(arr, row);
         // remove lines that ended here
@@ -876,7 +842,6 @@ function main(input: string) {
         arr.sort((a, b) => a[1][0] - b[1][0]);
         let nextRow = arr[0][1][0]; // closest end of the line 
         arr.sort((a, b) => a[0][1] - b[0][1]);
-        
         if (verticalLines.length) {
             verticalLines.sort((a, b) => a[0][0] - b[0][0]);
             nextRow = Math.min(nextRow, verticalLines[0][0][0]); // closest start of the line

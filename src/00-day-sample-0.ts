@@ -1,4 +1,4 @@
-import { isCharNumber, getNumberLeftAndRight, Index, replaceAt } from './utils'
+import { isCharNumber, getNumberLeftAndRight, Index, replaceAt, coord } from './utils'
 
 export { };
 

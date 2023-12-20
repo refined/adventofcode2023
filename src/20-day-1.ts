@@ -79,14 +79,16 @@ broadcaster -> sr, cg, dt, zs
 `;
 
 interface CommandFlipFlop {
+    name: string;
     com: "%",
     is_on: boolean,
     to: string[]
 };
 
 interface CommandConjunction {
+    name: string;
     com: "&",
-    inputs: Map<string, boolean>,
+    memory: Map<string, boolean>,
     to: string[]
 };
 
@@ -99,58 +101,80 @@ function main(input: string) {
 
     const commands = new Map<string, Command>();
     const outs: { from: string, to: string, is_low: boolean }[] = [];
+    const broadcaster = [];
     for (const line of lines) {
         const from = line.split(" -> ")[0];
         const to = line.split(" -> ")[1].split(", ");
+        const name = from.substring(1);
         if (from[0] === "%") {
-            commands.set(from.substring(1), {
+            commands.set(name, {
+                name,
                 com: "%",
                 to: to,
                 is_on: false
             });
         } else if (from[0] === "&") {
-            commands.set(from.substring(1), {
+            commands.set(name, {
+                name,
                 com: "&",
                 to: to,
-                inputs: new Map()
+                memory: new Map()
             });
         } else {
-            outs.push(...to.map(t => ({ from: "broadcaster", to: t, is_low: true })));
+            broadcaster.push(...to.map(t => ({ from: "broadcaster", to: t, is_low: true })));
         }
     }
 
-    while (outs.length) {
-        const next = outs.pop();
-        const command = commands.get(next.to);
-        if (command) {
-            // off 
-            // on high dont change state
-            // on low change from on-off and back
-            if (command.com === "%") {
-                let nextLow = false;
-                if (next.is_low) {
-                    nextLow = command.is_on;
-                    command.is_on = !command.is_on;
-                    outs.push(...command.to.map(t => ({ from: next.to, to: t, is_low: nextLow })));
-                } else {
-                    if (command.is_on) {
-                        outs.push(...command.to.map(t => ({ from: next.to, to: t, is_low: next.is_low })));
+    for (const [name, command] of commands.entries()) {
+        for (const output of command.to) {
+            const out = commands.get(output);
+            if (out && out.com === "&") {
+                out.memory.set(name, true);
+            }
+        }
+    }
+
+
+    let lowCounter = 0;
+    let hightCounter = 0;
+    for (let i = 0; i < 1000; i++) {
+        lowCounter++;
+        outs.push(...broadcaster);
+        while (outs.length) {
+            const next = outs.splice(0, 1)[0];
+            // console.log(next.from + " " + (next.is_low ? "low" : "high") + " " + next.to);
+            if (next.is_low) lowCounter++;
+            if (!next.is_low) hightCounter++;
+
+            const command = commands.get(next.to);
+            if (command) {
+                // off 
+                // on high dont change state
+                // on low change from on-off and back
+                if (command.com === "%") {
+                    if (next.is_low) {
+                        command.is_on = !command.is_on;
+                        const outgoingLow = !command.is_on;
+                        outs.push(...command.to.map(t => ({ from: next.to, to: t, is_low: outgoingLow })));
                     }
                 }
-
-            }
-            // if it all high pulses => low pulse; otherwise high pulse
-            if (command.com === "&") {
-                command.inputs.set()
+                // if it all high pulses => low pulse; otherwise high pulse
+                if (command.com === "&") {
+                    command.memory.set(next.from, next.is_low);
+                    const outgoingLow = [...command.memory.values()].every(isLow => !isLow) ? true : false;
+                    outs.push(...command.to.map(t => ({ from: next.to, to: t, is_low: outgoingLow })));
+                }
             }
         }
     }
-
+    sum = lowCounter*hightCounter;
     console.log(sum);
 }
 
-console.log("test");
+console.log("test1");
 main(test);
+console.log("test2");
+main(test2);
 console.log("task");
 main(task);
 console.log("done");

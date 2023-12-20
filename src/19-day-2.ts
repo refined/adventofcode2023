@@ -804,6 +804,7 @@ export interface Rule {
     comparator: ">" | "<";
     outcome: string;
 }
+
 interface XMAS { x: [number, number], m: [number, number], a: [number, number], s: [number, number] };
 
 function getLess(inputValue: [number, number], compValue: number, input: XMAS | null, arg_name: string): XMAS | null {
@@ -814,7 +815,7 @@ function getLess(inputValue: [number, number], compValue: number, input: XMAS | 
         if (inputValue[0] < compValue) {
             return {
                 ...input,
-                [arg_name]: [inputValue[0], compValue],
+                [arg_name]: [inputValue[0], compValue-1],
             };
         }
     }
@@ -829,7 +830,7 @@ function getMore(inputValue: [number, number], compValue: number, input: XMAS | 
         if (inputValue[1] > compValue) {
             return {
                 ...input,
-                [arg_name]: [compValue, inputValue[1]],
+                [arg_name]: [compValue+1, inputValue[1]],
             };
         }
     }
@@ -837,41 +838,55 @@ function getMore(inputValue: [number, number], compValue: number, input: XMAS | 
 }
 
 function getRuleOut(input: XMAS, rules: Rule[], afterRules: string): [XMAS, string][] {
+    // gg{s>3667:A,s>3630:A,m<1120:R,A}
     const vars: [XMAS, string][] = [];
-    let opposite = input;
+    let opposite: XMAS | null = input;
     for (const rule of rules) {
-        const inputValue: [number, number] = input[rule.arg_name];
+        const inputValue: [number, number] = opposite[rule.arg_name];
         const compValue = rule.value;
         if (rule.comparator === "<") {
-            const o = getLess(inputValue, compValue, input, rule.arg_name);
+            const o = getLess(inputValue, compValue, opposite, rule.arg_name);
             if (o) {
                 vars.push([o, rule.outcome]);
             }
-            opposite = getMore(inputValue, compValue, opposite, rule.arg_name);
+            opposite = getMore(inputValue, compValue-1, opposite, rule.arg_name);
+        } else if (rule.comparator === ">") {
+            const o = getMore(inputValue, compValue, opposite, rule.arg_name);
+            if (o) {
+                vars.push([o, rule.outcome]);
+            }
+            opposite = getLess(inputValue, compValue+1, opposite, rule.arg_name);
+        } else {
+            throw new Error("Should never happen");
         }
-        if (rule.comparator === ">") {
-            const o = getMore(inputValue, compValue, input, rule.arg_name);
-            if (o) {
-                vars.push([o, rule.outcome]);
-            }
-            opposite = getLess(inputValue, compValue, opposite, rule.arg_name);
+        if (!opposite) {
+            return vars;
         }
     }
-    vars.push([opposite, afterRules]);
+    if (opposite) {
+        vars.push([opposite, afterRules]);
+    }
     return vars;
 }
 
 function getSuccesses(rules: Map<string, [Rule[], string]>): XMAS[] {
-    const dlimit: XMAS = { x: [0, 4000], m: [0, 4000], a: [0, 4000], s: [0, 4000] };
+    const dlimit: XMAS = { x: [1, 4000], m: [1, 4000], a: [1, 4000], s: [1, 4000] };
     const limits: [XMAS, string][] = [[dlimit, "in"]];
     const succeses: XMAS[] = [];
 
     while (limits.length) {
         const limit = limits.pop();
+        // console.log(limit[1]);
         const rule = rules.get(limit[1]);
         const outs = getRuleOut(limit[0], rule[0], rule[1]);
-        succeses.push(...outs.filter(c => c[1] === "A").map(i => i[0]));
-        limits.push(...outs.filter(c => c[1] !== "A" && c[1] !== "R"))
+        const pushToSuccess = outs.filter(c => c[1] === "A").map(i => i[0]);
+        succeses.push(...pushToSuccess);
+        limits.push(...outs.filter(c => c[1] !== "A" && c[1] !== "R"));
+        if (pushToSuccess.length) {
+            for (const s of pushToSuccess) {
+                console.log(Object.entries(s).map(([k,v]) => k + "_" + v.join("_")).join(","));
+            }
+        }
     }
 
     return succeses;
@@ -902,14 +917,21 @@ function main(input: string) {
 
     const succeses = getSuccesses(rules);
     for (const s of succeses) {
-        sum += (s.a[1] - s.a[0]) * (s.x[1] - s.x[0]) * (s.m[1] - s.m[0]) * (s.s[1] - s.s[0]);
+        if (s.a[1] - s.a[0] <= 0 || s.x[1] - s.x[0] <= 0 || s.m[1] - s.m[0] <= 0 || s.s[1] - s.s[0] <= 0) {
+            throw new Error("Should never happen");
+        }
+
+        sum += (s.a[1] - s.a[0] + 1) 
+            * (s.x[1] - s.x[0] + 1) 
+            * (s.m[1] - s.m[0] + 1) 
+            * (s.s[1] - s.s[0] + 1);
     }
 
     console.log(sum);
 }
 
 console.log("test");
-main(test);
+// main(test);
 console.log("task");
 main(task);
 console.log("done");

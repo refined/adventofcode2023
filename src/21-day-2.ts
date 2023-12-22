@@ -271,7 +271,7 @@ function main(input: string, steps: number) {
             const iterates = (steps - 65) / 131;
             const odd = Math.pow((iterates), 2);
             const even = Math.pow((iterates - 1), 2);
-            sum = sumOnField(fields.get("0,131")) * even + sumOnField(fields.get("0,262")) * odd // all full square
+            sum = sumOnField(fields.get("0,131")) * even + sumOnField(fields.get("0,0")) * odd // all full square
                 + sumOnField(fields.get("0,393")) // top, left, right, bottom
                 + sumOnField(fields.get("0,-393"))
                 + sumOnField(fields.get("-393,0"))
@@ -308,13 +308,6 @@ function main(input: string, steps: number) {
         }
         for (const f of newFields) {
             fields.set(f[0], f[1]);
-        }
-        // console.log("fields: " + fields.size);
-
-        if (counter % 1000 === 0 && counter > 0) {
-            sum = 0;
-            [...fields.values()].forEach(v => sum += [...v].filter(ch => ch === "S").length);
-            console.log("i:" + counter + " sum:" + sum + " cachesize:" + cache.size);
         }
     }
 

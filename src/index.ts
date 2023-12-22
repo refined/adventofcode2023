@@ -5,4 +5,4 @@ console.log = function (data) {
     this.logCopy(currentDate, data);
 };
 
-import "./21-day-2";
+import "./22-day-2";

@@ -5,4 +5,4 @@ console.log = function (data) {
     this.logCopy(currentDate, data);
 };
 
-import "./2023/23-day-1";
+import "./2023/24-day-1";

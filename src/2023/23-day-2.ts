@@ -1,4 +1,5 @@
-import { isCharNumber, getNumberLeftAndRight, Index, replaceAt, coord } from '../utils'
+import { isCharNumber, getNumberLeftAndRight, Index, dir, coord } from '../utils'
+import {Graph, connectTwoNodes, dfsMaxPath} from '../graph'
 
 export { };
 
@@ -172,37 +173,87 @@ const task = `
 ###########################################################################################################################################.#
 `;
 
-function main(input: string) {
-    const lines = input.split("\n").map(t => t.trim()).filter((t) => t);
-    let sum = 0;
+const chars = new Set(['^', '>', 'v', '<', '.']);
+function initNode(coord: coord): Node {
+    return {key: coord.join(","), coord: coord, out_keys: [], out_lengths: [] };
+}
+export interface Node {
+    key: string, coord: coord, out_keys: string[], out_lengths: number[]
+}
 
-    const start = lines[0].indexOf(".");
-    const queue: [coord, coord[]][] = [];
-    queue.push([[0, start], []]);
-
-    const endPaths = [];
-    while (queue.length) {
-        const [from, path] = queue.splice(0, 1)[0];
-        if (from[0] === lines.length - 1) {
-            endPaths.push([...path, from]);
-            continue;
-        }
+function findNextNode(lines: string[], start: coord, startDir: dir): [Node, number, dir[]] {
+    let prev: coord = [start[0] + startDir[0], start[1]+startDir[1]];
+    let prevDir = [startDir[0], startDir[1]];
+    let len = 0;
+    while(true) {
+        const toInsert = [];
         for (const dir of [[0,1],[0,-1],[1,0],[-1,0]]) {
-            const i = from[0] + dir[0];
-            const j = from[1] + dir[1];
+            if (dir[0] === -prevDir[0] && dir[1] === -prevDir[1]) continue;
+
+            const i = prev[0] + dir[0];
+            const j = prev[1] + dir[1];
             if (lines[i] !== undefined) {
                 const ch = lines[i][j];
-                if (['^', '>', 'v', '<', '.'].includes(ch)
-                    && path.filter(p => p[0] === i && p[1] ===j).length === 0) {               
-                    queue.push([[i,j], [...path, from]]);
+                if (chars.has(ch)) {
+                    toInsert.push([i,j]);
                 }
             }
-         }
+        }
+        const dirs = toInsert.map(i => [i[0]-prev[0], i[1]-prev[1]] as dir);
+        if (toInsert.length > 1) {
+            return [initNode(prev), len, dirs];
+        }
+        if (toInsert.length === 0) {
+            return [initNode(prev), len, dirs];
+        }
+        prevDir = dirs[0];
+        prev = toInsert[0];
+        len += 1;
     }
-    for (const path of endPaths) {
-        sum = Math.max(sum, path.length-1);
+}
+
+function findNodes(lines: string[], start: coord): Map<string, Node> {
+    const queue: [coord, dir][] = [];
+    queue.push([start, [1, 0]]);
+    const nodes = new Map<string, Node>();
+    nodes.set(start.join(","), initNode(start));
+
+    while (queue.length) {
+        const [from, dir] = queue.splice(0, 1)[0];
+        const fromNode = nodes.get(from.join(","));
+
+        const [nextNode, len, nextDir] = findNextNode(lines, from, dir);
+        
+        if (nextNode.key !== fromNode.key) {
+            fromNode.out_keys.push(nextNode.key);
+            fromNode.out_lengths.push(len);
+            if (!nodes.has(nextNode.key)) {
+                nodes.set(nextNode.key, nextNode);
+                for (const d of nextDir) queue.push([nextNode.coord, d]);
+            }
+        }
     }
-    console.log(sum);
+    return nodes;
+}
+
+function main(input: string) {
+    const lines = input.split("\n").map(t => t.trim()).filter((t) => t);
+
+    const start: coord = [0, lines[0].indexOf(".")];
+    const end: coord = [lines.length -1, lines[lines.length -1].indexOf(".")];
+    const nodes = findNodes(lines, start);
+    const points = new Set<string>(nodes.keys());
+    //const points: coord[] = [start, ...finaAllPoints(lines), end];
+    const graph: Graph = new Map();
+    for (const [point, node] of nodes.entries()) {
+        for (const [i, toPoint] of node.out_keys.entries()) {
+            connectTwoNodes(graph, point, toPoint, node.out_lengths[i]);
+        }
+    }
+    // идем dfs и кроме вершин на которых мы уже были
+
+    const max = dfsMaxPath(graph, start.join(","), end.join(","));
+    console.log(max);
 }
 
 console.log("test");

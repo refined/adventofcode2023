@@ -25,6 +25,7 @@ export function getNumberLeftAndRight(line: string, i: number): { num: number, l
 
 export interface Index { col: number, row: number }
 export type coord = [number, number];
+export type dir = [-1 | 0 | 1, -1 | 0 | 1];
 
 export function gcd2(a, b) {
     // Greatest common divisor of 2 integers
